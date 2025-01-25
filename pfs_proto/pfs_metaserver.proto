@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+// Proto file for metaserver-client connections
+
+package pfsmeta;
+
+service MetadataServer {
+    rpc Initialize(InitializeRequest) returns (InitializeResponse); // Initialize client and assign Client ID
+    rpc Ping(PingRequest) returns (PingResponse); // Health check
+    rpc CreateFile(CreateFileRequest) returns (CreateFileResponse);
+    rpc FetchMetadata(FetchMetadataRequest) returns (FetchMetadataResponse);
+    // Stream tokens between client and server
+    rpc StreamToken (stream TokenRequest) returns (stream TokenResponse);
+    rpc UpdateMetadata (UpdateMetadataRequest) returns (UpdateMetadataResponse);
+    rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
+    rpc ClientShutdown(ClientShutdownRequest) returns (ClientShutdownResponse);
+
+}
+
+// Request for initializing client
+message InitializeRequest {
+    string client_ip = 1; // Client's IP address
+}
+
+// Response for client initialization
+message InitializeResponse {
+    int32 client_id = 1; // Assigned Client ID
+}
+
+// Ping Request and Response
+message PingRequest {
+    string message = 1; // Optional message
+}
+
+message PingResponse {
+    bool success = 1; // Success or failure
+    string response_message = 2; // Response from the server
+}
+
+message CreateFileRequest {
+    string filename = 1;   // Name of the file to create
+    int32 stripe_width = 2; // Stripe width for the file
+}
+
+message CreateFileResponse {
+    bool success = 1;      // Whether the creation was successful
+    string message = 2;    // Additional message (e.g., error details)
+}
+
+//message FileMetadata {
+  //  string filename = 1;
+   // int32 stripe_width = 2;
+   // int64 filesize = 3;
+   // int64 ctime = 4;
+    //int64 mtime = 5;
+    //repeated string file_servers = 6;
+//}
+
+message FileRecipe {
+    string file_server_address = 1;
+    int64 range_start = 2;
+    int64 range_end = 3;
+}
+
+message FileMetadata {
+    string filename = 1;
+    int64 filesize = 2;
+    int64 ctime = 3;
+    int64 mtime = 4;
+    int64 stripe_width = 5;
+    repeated FileRecipe recipes = 6;
+}
+
+
+message FetchMetadataRequest {
+    string filename = 1;
+}
+
+message FetchMetadataResponse {
+    bool success = 1;
+    string message = 2;
+    FileMetadata metadata = 3; // Metadata details
+}
+// Messages for token streaming
+message TokenRequest {
+    int32 client_id = 1;
+    int32 fd = 2;  // Add this field if missing
+    string filename = 3;
+    int64 start_byte = 4;
+    int64 end_byte = 5;
+    string token_type = 6;  // "READ" or "WRITE"
+}
+
+message TokenResponse {
+    int32 client_id = 1;
+    string filename = 2;
+    string token_action = 3;  // "GRANT" or "REVOKE"
+    int64 start_byte = 4;
+    int64 end_byte = 5;
+}
+
+message UpdateMetadataRequest {
+    string filename = 1;          // Name of the file
+    int64 filesize = 2;           // Updated file size
+    int64 mtime = 3;              // Last modification time (optional)
+}
+
+message UpdateMetadataResponse {
+    bool success = 1;             // Whether the update was successful
+    string message = 2;           // Error or success message
+}
+
+// Delete File Messages
+message DeleteFileRequest {
+    string filename = 1; // Name of the file to delete
+}
+
+message DeleteFileResponse {
+    bool success = 1; // Whether the deletion was successful
+    string message = 2; // Additional message (e.g., error details)
+}
+
+
+message ClientShutdownRequest {
+    int32 client_id = 1; 
+}
+
+message ClientShutdownResponse {
+    bool success = 1;    
+    string message = 2;  
+}

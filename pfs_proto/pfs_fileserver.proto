@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package pfsfile;
+
+// Define the File Server Service
+service FileServer {
+    rpc Ping (PingRequest) returns (PingResponse);
+    rpc ReadFile (ReadFileRequest) returns (ReadFileResponse);
+    rpc WriteFile (WriteFileRequest) returns (WriteFileResponse);
+    rpc StreamData (stream StreamRequest) returns (stream StreamResponse);
+    rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
+}
+
+// Request for Ping RPC
+message PingRequest {
+    string message = 1; // Optional client-supplied message for debugging
+}
+
+// Response for Ping RPC
+message PingResponse {
+    bool success = 1;
+    string response_message = 2;
+}
+
+// Read File Messages
+message ReadFileRequest {
+    string filename = 1;
+    int64 offset = 2;
+    int64 size = 3;
+}
+
+message ReadFileResponse {
+    bool success = 1;
+    bytes data = 2;
+    string error_message = 3;
+}
+
+// Write File Messages
+message WriteFileRequest {
+    string filename = 1;
+    int64 offset = 2;
+    bytes data = 3;
+}
+
+message WriteFileResponse {
+    bool success = 1;
+    string error_message = 2;
+}
+
+// Stream request for read/write operations
+message StreamRequest {
+    string client_id = 1;
+    string operation = 2;  // "READ" or "WRITE"
+    string filename = 3;
+    int64 offset = 4;
+    int64 size = 5;        // Used for READ
+    bytes data = 6;       // Used for WRITE
+}
+
+// Stream response for read/write operations
+message StreamResponse {
+    string client_id = 1;
+    string filename = 2;
+    bool success = 3;
+    bytes data = 4;           // Used for READ
+    string error_message = 5;  // Populated on error
+}
+
+message DeleteFileRequest {
+    string filename = 1; // Name of the file to delete
+}
+
+message DeleteFileResponse {
+    bool success = 1; // Whether the deletion was successful
+    string message = 2; // Error or success message
+}
